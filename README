@@ -1,0 +1,20 @@
+LOLPython is a modification on Python that changes to a lulzier syntax.
+It's implimented through PLY
+
+lolpython.lang is a syntax highlighter file for gedit, for use with 
+LOLPython.
+
+lolpython.py is a slightly modified version of lolpython from 
+http://dalkescientific.com/writings/diary/archive/2007/06/01/lolpython.html
+
+I've added some little things like OBTW..TLDR equivalent to """.."""
+
+Added a shortcut to my ~/.bashrc to for 
+
+alias lolpy="python /home/jamtot/LOLPython/lolpython.py"
+
+so I can just type 
+
+$ pylol code.lol 
+
+to run

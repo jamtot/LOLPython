@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ This file is part of GtkSourceView
+
+ Original Author: Gustavo Giráldez <gustavo.giraldez@gmx.net>
+ Copyright (C) 2003 Gustavo Giráldez <gustavo.giraldez@gmx.net>
+ Copyright (C) 2004 Benoît Dejean <TaZForEver@free.fr>
+ Copyright (C) 2006 Steve Frécinaux <nud@apinc.org>
+ Copyright (C) 2012 Stefano Palazzo <stefano-palazzo@ubuntu.com>
+
+ GtkSourceView is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ GtkSourceView is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+ Modified for LOLPython by: Jonathan Morris
+ 6/4/16
+
+-->
+<language id="lolpython" _name="LolPython" version="2.0" _section="Scripts">
+  <metadata>
+    <property name="mimetypes">text/lolpython</property>
+    <property name="globs">*.lol</property>
+    <property name="line-comment-start">BTW</property>
+    <property name="block-comment-start">LOL</property>
+    <property name="block-comment-end">/LOL</property>
+  </metadata>
+
+  <styles>
+    <style id="module-handler"    _name="Module Handler"        map-to="def:preprocessor"/>
+    <style id="keyword"           _name="Keyword"               map-to="def:keyword"/>
+    <style id="multiline-string"  _name="Multiline string"      map-to="def:string"/>
+    <style id="string"            _name="String"                map-to="def:string"/>
+    <style id="escaped-char"      _name="Escaped Character"     map-to="def:special-char"/>
+    <style id="format"            _name="Format"                map-to="def:character"/>
+    <style id="string-conversion" _name="string-conversion"/>
+    <style id="special-variable"  _name="Special Variable"      map-to="def:identifier"/>
+    <style id="boolean"           _name="Boolean"               map-to="def:boolean"/>
+    <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
+    <style id="decimal"           _name="Decimal number"        map-to="def:decimal"/>
+    <style id="base-n-integer"    _name="Base-N number"         map-to="def:base-n-integer"/>
+    <style id="complex"           _name="Complex number"        map-to="def:complex"/>
+    <style id="builtin-constant"  _name="Builtin Constant"      map-to="def:special-constant"/>
+    <style id="operator"          _name="Operator"              map-to="def:operator"/>
+    <style id="builtin-object"    _name="Builtin Object"        map-to="def:type"/>
+    <style id="builtin-function"  _name="Builtin Function"      map-to="def:builtin"/>
+  </styles>
+
+  <definitions>
+    <define-regex id="identifier">[_a-zA-Z][_a-zA-Z0-9]*</define-regex>
+    <define-regex id="number">[1-9][0-9]*</define-regex>
+
+    <!-- http://docs.python.org/lib/typesseq-strings.html -->
+    <context id="format" style-ref="format" extend-parent="false">
+      <match extended="true">
+        %                       # leading % sign
+        \(\%{identifier}\)?     # mapping key
+        [#0\-\ \+]*             # conversion flags
+        (\-?\%{number}|\*)?     # minimum field width
+        (\.(\-?\%{number}|\*))? # precision
+        (hlL)?                  # lentgh modifier
+        [diouxXeEfFgGcrs%]      # conversion type
+      </match>
+    </context>
+
+    <!-- http://docs.python.org/ref/strings.html -->
+    <context id="escaped-char" style-ref="escaped-char" extend-parent="true">
+      <match extended="true">
+        \\(                 # leading backslash
+        [\\'"abfnrtv]     | # single escaped char
+        N\{[A-Z\ ]+\}     | # named unicode character
+        u[0-9A-Fa-f]{4}   | # xxxx - character with 16-bit hex value xxxx
+        U[0-9A-Fa-f]{8}   | # xxxxxxxx - character with 32-bit hex value xxxxxxxx
+        x[0-9A-Fa-f]{1,2} | # \xhh - character with hex value hh
+        [0-7]{1,3}          # \ooo - character with octal value ooo
+        )
+      </match>
+    </context>
+
+    <define-regex id="string-prefix">(u|U)?</define-regex>
+    <define-regex id="raw-string-prefix">(r|ur|R|UR|Ur|uR)</define-regex>
+
+    <context id="multiline-double-quoted-string" style-ref="multiline-string" class="string" class-disabled="no-spell-check">
+      <start>\%{string-prefix}"""</start>
+      <end>"""</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+      </include>
+    </context>
+
+    <context id="multiline-single-quoted-string" style-ref="multiline-string" class="string" class-disabled="no-spell-check">
+      <start>\%{string-prefix}'''</start>
+      <end>'''</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+      </include>
+    </context>
+
+    <context id="double-quoted-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>\%{string-prefix}"</start>
+      <end>"</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="single-quoted-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>\%{string-prefix}'</start>
+      <end>'</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="multiline-double-quoted-raw-string" style-ref="multiline-string" class="string" class-disabled="no-spell-check">
+      <start>\%{raw-string-prefix}"""</start>
+      <end>"""</end>
+      <include>
+        <context ref="format"/>
+      </include>
+    </context>
+
+    <context id="multiline-single-quoted-raw-string" style-ref="multiline-string" class="string" class-disabled="no-spell-check">
+      <start>\%{raw-string-prefix}'''</start>
+      <end>'''</end>
+      <include>
+        <context ref="format"/>
+      </include>
+    </context>
+
+    <context id="double-quoted-raw-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>\%{raw-string-prefix}"</start>
+      <end>"</end>
+      <include>
+        <context ref="format"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="single-quoted-raw-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>\%{raw-string-prefix}'</start>
+      <end>'</end>
+      <include>
+        <context ref="format"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="string-conversion" style-ref="string-conversion" end-at-line-end="true">
+      <start>`</start>
+      <end>`</end>
+      <include>
+        <context ref="lolpython"/>
+      </include>
+    </context>
+
+    <context id="special-variables" style-ref="special-variable">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <keyword>self</keyword>
+      <keyword>__name__</keyword>
+      <keyword>__debug__</keyword>
+
+      <!-- _lol_sys.argv -->
+	  <keyword>ARGZ</keyword>
+	  <!-- () -->
+	  <keyword>THINGZ</keyword>
+	  <!-- . -->
+	  <keyword>OWN</keyword>
+	  <!-- () -->
+	  <keyword>THING</keyword>
+	  <!-- self. -->
+	  <keyword>MY</keyword>
+	  <!-- (self) -->
+	  <keyword>MYSELF</keyword>
+	  
+      <!-- 0 -->
+	  <keyword>EASTERBUNNY</keyword>
+	  <!-- 1 -->
+	  <keyword>CHEEZBURGER</keyword>
+	  <!-- -1 -->
+	  <keyword>CHOKOLET</keyword>
+	  <!-- 2 -->
+	  <keyword>TWIN</keyword>
+	  <!-- 2 -->
+	  <keyword>TWINZ</keyword>
+	  <!-- 2 -->
+	  <keyword>TWINS</keyword>
+	  <!-- -2 -->
+	  <keyword>EVILTWIN</keyword>
+	  <!-- -2 -->
+	  <keyword>EVILTWINZ</keyword>
+	  <!-- -2 -->
+	  <keyword>EVILTWINS</keyword>
+	  <!-- 10 -->
+	  <keyword>ALLFINGERZ</keyword>
+	  <!-- -10 -->
+	  <keyword>TOEZ</keyword>
+	  <!-- 1 -->
+	  <keyword>ONE</keyword>
+	  <!-- 1 -->
+	  <keyword>ONCE</keyword>
+	  <!-- 2 -->
+	  <keyword>TWO</keyword>
+	  <!-- 2 -->
+	  <keyword>TWICE</keyword>
+	  <!-- 3 -->
+	  <keyword>THR33</keyword>
+	  <!-- 4 -->
+	  <keyword>FOUR</keyword>
+	  <!-- 5 -->
+	  <keyword>FIV</keyword>
+	  <!-- 6 -->
+	  <keyword>SIKS</keyword>
+	  <!-- 7 -->
+	  <keyword>SEVN</keyword>
+	  <!-- 8 -->
+	  <keyword>ATE</keyword>
+	  <!-- 9 -->
+	  <keyword>NINE</keyword>
+    </context>
+
+    <context id="boolean" style-ref="boolean">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <keyword>MEH</keyword>
+      <keyword>YEAH</keyword>
+    </context>
+
+    <define-regex id="float" extended="true">
+      ( (\d+)?\.\d+ | \d+\. ) |
+      ( (\d+|(\d+)?\.\d+|\d+\.)[eE][+-]?\d+ )
+    </define-regex>
+
+    <context id="complex" style-ref="complex">
+      <match>(?&lt;![\w\.])(\%{float}|\d+)[jJ]\b</match>
+    </context>
+
+    <context id="float" style-ref="floating-point">
+      <match>(?&lt;![\w\.])\%{float}(?![\w\.])</match>
+    </context>
+
+    <context id="decimal" style-ref="decimal">
+      <match>(?&lt;![\w\.])([1-9][0-9]*|0)[lL]?(?![\w\.])</match>
+    </context>
+
+    <context id="octal" style-ref="base-n-integer">
+      <match>(?&lt;![\w\.])0[0-7]+[lL]?(?![\w\.])</match>
+    </context>
+
+    <context id="hex" style-ref="base-n-integer">
+      <match>(?&lt;![\w\.])0[xX][0-9A-Fa-f]+[lL]?(?![\w\.])</match>
+    </context>
+
+    <context id="module-handler" style-ref="module-handler">
+      <!-- from -->
+      <keyword>IN MAI</keyword>
+      <!-- import -->
+      <keyword>GIMME</keyword>
+      <!-- as -->
+      <keyword>LIKE</keyword>
+    </context>
+
+    <context id="keywords" style-ref="keyword">
+	  <!--<keyword>&</keyword><!-!- and 
+      breaks it, used for and-->
+	  
+	  <!-- assert -->
+	  <keyword>SO GOOD</keyword>
+      
+	  
+	  <!-- break -->
+	  <keyword>KTHXBYE</keyword>
+      <!-- class -->
+	  <keyword>ME MAKE</keyword>
+      <!-- continue -->
+	  <keyword>KTHX</keyword>
+      <!-- def -->
+	  <keyword>SO IM LIKE</keyword>
+      <!-- del -->
+	  <keyword>DO NOT WANT</keyword>
+      <!-- elif -->
+	  <keyword>OR IZ</keyword>
+      <!-- else -->     
+	  <keyword>I GIVE UP</keyword>   
+	  <!-- else -->
+	  <keyword>IZ KEWL</keyword>
+	  <!-- else -->
+	  <keyword>ALL DONE</keyword>
+	  <!-- else -->
+	  <keyword>NOPE</keyword>
+      <!-- except -->
+	  <keyword>ON NOES</keyword>
+      <!-- finally -->
+	  <keyword>WHATEVER</keyword>
+      <!-- for -->
+	  <keyword>GIMME EACH</keyword>
+      
+	  <keyword>global</keyword>
+      <!-- if -->
+	  <keyword>IZ</keyword>
+      <!-- in -->
+	  <keyword>IN UR</keyword>
+	  <!-- in -->
+	  <keyword>IN THE</keyword>
+	  <!-- in -->
+	  <keyword>IN THIS</keyword>
+      <!-- is -->
+	  <keyword>KINDA IS</keyword>
+      
+	  <keyword>lambda</keyword>
+      <!-- not -->
+	  <keyword>AINT</keyword>
+      <!-- or -->
+	  <keyword>OR MABEE</keyword>
+      <!-- pass -->
+	  <keyword>I IZ CUTE</keyword>
+      <!-- raise -->
+	  <keyword>HALP</keyword>
+      <!-- return -->
+	  <keyword>U TAKE</keyword>
+      <!-- try -->
+	  <keyword>PLZ</keyword>
+      <keyword>while</keyword>
+      <!-- while 1 -->
+	  <keyword>WHILE I CUTE</keyword>
+      <!-- with -->
+	  <keyword>WIF</keyword>
+      <!-- yield -->
+	  <keyword>U BORROW</keyword>
+
+      <keyword>exec</keyword>
+      <keyword>print</keyword>
+      <!-- stdout -->
+	  <keyword>VISIBLE</keyword>
+      <!-- stderr -->
+	  <keyword>COMPLAIN</keyword>
+
+	  <!-- = -->
+	  <keyword>CAN HAS</keyword>
+	  <!-- = -->
+	  <keyword>CAN HAZ</keyword>
+
+	  <!-- [] -->
+	  <keyword>INVISIBLE LIST</keyword>
+      <!-- {} -->
+	  <keyword>INVISIBLE BUCKET</keyword>
+	  <!-- "" -->
+	  <keyword>INVISIBLE STRING</keyword>
+
+      <!-- % 2 == 0 -->
+	  <keyword>EVEN</keyword>
+      <!-- % 2 == 1 -->
+	  <keyword>ODD</keyword>
+
+      <!-- [ ] (closed with ! or OK) -->
+	  <keyword>SOME</keyword>
+      <!-- [ ] (closed with ! or OK) -->
+	  <keyword>LOOK AT</keyword>
+      <!-- [ ] (closed with ! or OK) -->
+	  <keyword>LET THE</keyword>
+      <!-- ( ) (closed with ! or OK) -->
+	  <keyword>WIT</keyword>
+      <!-- ( ) (closed with ! or OK) -->
+	  <keyword>THEZ</keyword>
+      <!-- { } (closed with ! or OK) -->
+	  <keyword>BUCKET</keyword>
+      <!-- closes (, [ AND { (OK! closes 2, OK!! 3, etc.) -->
+	  <keyword>OK</keyword>
+	  <!--<keyword>!</keyword><!-!- closes (, [ AND { breaks stuff-->
+    </context>
+
+    <context id="builtin-constants" style-ref="builtin-constant">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <keyword>Ellipsis</keyword>
+      <keyword>None</keyword>
+      <keyword>NotImplemented</keyword>
+    </context>
+
+    <context id="builtin-objects" style-ref="builtin-object">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <!-- ZeroDivisionError -->
+      <keyword>BLACKHOLE</keyword>
+      <!-- AssertionError -->
+      <keyword>DONOTLIKE</keyword>
+
+      <keyword>ArithmeticError</keyword>
+      <keyword>AssertionError</keyword>
+      <keyword>AttributeError</keyword>
+      <keyword>EnvironmentError</keyword>
+      <keyword>EOFError</keyword>
+      <keyword>Exception</keyword>
+      <keyword>FloatingPointError</keyword>
+      <keyword>ImportError</keyword>
+      <keyword>IndentationError</keyword>
+      <keyword>IndexError</keyword>
+      <keyword>IOError</keyword>
+      <keyword>KeyboardInterrupt</keyword>
+      <keyword>KeyError</keyword>
+      <keyword>LookupError</keyword>
+      <keyword>MemoryError</keyword>
+      <keyword>NameError</keyword>
+      <keyword>NotImplementedError</keyword>
+      <keyword>OSError</keyword>
+      <keyword>OverflowError</keyword>
+      <keyword>ReferenceError</keyword>
+      <keyword>RuntimeError</keyword>
+      <keyword>StandardError</keyword>
+      <keyword>StopIteration</keyword>
+      <keyword>SyntaxError</keyword>
+      <keyword>SystemError</keyword>
+      <keyword>SystemExit</keyword>
+      <keyword>TabError</keyword>
+      <keyword>TypeError</keyword>
+      <keyword>UnboundLocalError</keyword>
+      <keyword>UnicodeDecodeError</keyword>
+      <keyword>UnicodeEncodeError</keyword>
+      <keyword>UnicodeError</keyword>
+      <keyword>UnicodeTranslateError</keyword>
+      <keyword>ValueError</keyword>
+      <keyword>WindowsError</keyword>
+      <keyword>ZeroDivisionError</keyword>
+      <keyword>Warning</keyword>
+      <keyword>UserWarning</keyword>
+      <keyword>DeprecationWarning</keyword>
+      <keyword>PendingDeprecationWarning</keyword>
+      <keyword>SyntaxWarning</keyword>
+      <keyword>OverflowWarning</keyword>
+      <keyword>RuntimeWarning</keyword>
+      <keyword>FutureWarning</keyword>
+    </context>
+
+    <context id="builtin-functions" style-ref="builtin-function">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <keyword>__import__</keyword>
+
+      <!-- str -->
+      <keyword>STRING</keyword>
+	  <!-- int -->
+      <keyword>NUMBR</keyword>
+	  <!-- int -->
+      <keyword>BIGNESS</keyword>
+	  <!-- range -->
+      <keyword>NUMBRZ</keyword>
+	  <!-- xrange -->
+      <keyword>NUMBARZ</keyword>
+	  <!-- .append -->
+      <keyword>ADDED</keyword>
+
+      <keyword>abs</keyword>
+      <keyword>all</keyword>
+      <keyword>any</keyword>
+      <keyword>bin</keyword>
+      <keyword>bool</keyword>
+      <keyword>callable</keyword>
+      <keyword>chr</keyword>
+      <keyword>classmethod</keyword>
+      <keyword>compile</keyword>
+      <keyword>complex</keyword>
+      <keyword>delattr</keyword>
+      <keyword>dict</keyword>
+      <keyword>dir</keyword>
+      <keyword>divmod</keyword>
+      <keyword>enumerate</keyword>
+      <keyword>eval</keyword>
+      <keyword>filter</keyword>
+      <keyword>float</keyword>
+      <keyword>format</keyword>
+      <keyword>frozenset</keyword>
+      <keyword>getattr</keyword>
+      <keyword>globals</keyword>
+      <keyword>hasattr</keyword>
+      <keyword>hash</keyword>
+      <keyword>hex</keyword>
+      <keyword>id</keyword>
+      <keyword>input</keyword>
+      <keyword>int</keyword>
+      <keyword>isinstance</keyword>
+      <keyword>issubclass</keyword>
+      <keyword>iter</keyword>
+      <keyword>len</keyword>
+      <keyword>list</keyword>
+      <keyword>locals</keyword>
+      <keyword>map</keyword>
+      <keyword>max</keyword>
+      <keyword>min</keyword>
+      <keyword>object</keyword>
+      <keyword>oct</keyword>
+      <keyword>open</keyword>
+      <keyword>ord</keyword>
+      <keyword>pow</keyword>
+      <keyword>property</keyword>
+      <keyword>range</keyword>
+      <keyword>repr</keyword>
+      <keyword>reversed</keyword>
+      <keyword>round</keyword>
+      <keyword>setattr</keyword>
+      <keyword>set</keyword>
+      <keyword>slice</keyword>
+      <keyword>sorted</keyword>
+      <keyword>staticmethod</keyword>
+      <keyword>str</keyword>
+      <keyword>sum</keyword>
+      <keyword>super</keyword>
+      <keyword>tuple</keyword>
+      <keyword>type</keyword>
+      <keyword>vars</keyword>
+      <keyword>zip</keyword>
+      <keyword>apply</keyword>
+      <keyword>basestring</keyword>
+      <keyword>buffer</keyword>
+      <keyword>cmp</keyword>
+      <keyword>coerce</keyword>
+      <keyword>execfile</keyword>
+      <keyword>file</keyword>
+      <keyword>intern</keyword>
+      <keyword>long</keyword>
+      <keyword>raw_input</keyword>
+      <keyword>reduce</keyword>
+      <keyword>reload</keyword>
+      <keyword>unichr</keyword>
+      <keyword>unicode</keyword>
+      <keyword>xrange</keyword>
+    </context>
+
+    <context id="operators" style-ref="operator" extend-parent="false">
+	  <!-- + -->
+	  <keyword>ALONG WITH</keyword>
+	  <!-- - -->
+	  <keyword>TAKE AWAY</keyword>
+	  <!-- += -->
+	  <keyword>GETZ ANOTHR</keyword>
+	  <!-- -= -->
+	  <keyword>THROWZ AWAY</keyword>
+	  <!-- -= -->
+	  <keyword>THROWS AWAY</keyword>
+	  <!-- / -->
+	  <keyword>SMASHES INTO</keyword>
+      <!-- / -->
+	  <keyword>OVER</keyword>
+	  <!-- /= -->
+	  <keyword>SMASHES INTO HAS</keyword>
+	  <!-- // -->
+	  <keyword>SMASHES NICELY INTO</keyword>
+	  <!-- * -->
+	  <keyword>OF THOSE</keyword>
+	  <!-- *= -->
+	  <keyword>COPIES HIMSELF BY</keyword>
+	  <!-- *= -->
+	  <keyword>COPIES HERSELF BY</keyword>
+	  <!-- *= -->
+	  <keyword>COPIES ITSELF BY</keyword>
+	  <!-- ** -->
+	  <keyword>BY GRAYSKULL POWER</keyword>
+	  <!-- EQUALITY -->
+	  <!-- == -->
+	  <keyword>KINDA LIKE</keyword>
+	  <!-- != -->
+	  <keyword>KINDA NOT LIKE</keyword>
+	  <!-- != -->
+	  <keyword>NOT LIKE</keyword>
+	  <!-- is -->
+	  <keyword>KINDA IS</keyword>
+	  <!-- > -->
+	  <keyword>ATE MORE CHEEZBURGERS THAN</keyword>
+	  <!-- < -->
+	  <keyword>ATE FEWER CHEEZBURGERS THAN</keyword>
+	  <!-- >= -->
+	  <keyword>BIG LIKE</keyword>
+	  <!-- <= -->
+	  <keyword>SMALL LIKE</keyword>
+    </context>
+
+
+    <context id="lolpython" class="no-spell-check">
+      <include>
+        <context ref="keywords"/>
+        <context ref="operators"/>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+        <context ref="multiline-double-quoted-string"/>
+        <context ref="multiline-single-quoted-string"/>
+        <context ref="double-quoted-string"/>
+        <context ref="single-quoted-string"/>
+        <context ref="multiline-double-quoted-raw-string"/>
+        <context ref="multiline-single-quoted-raw-string"/>
+        <context ref="double-quoted-raw-string"/>
+        <context ref="single-quoted-raw-string"/>
+        <context ref="string-conversion"/>
+        <context ref="special-variables"/>
+        <context ref="boolean"/>
+        <context ref="complex"/>
+        <context ref="float"/>
+        <context ref="decimal"/>
+        <context ref="octal"/>
+        <context ref="hex"/>
+        <context ref="module-handler"/>
+        <context ref="builtin-constants"/>
+        <context ref="builtin-objects"/>
+        <context ref="builtin-functions"/>
+
+      </include>
+    </context>
+  </definitions>
+</language>
