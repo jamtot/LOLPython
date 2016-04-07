@@ -187,11 +187,6 @@ def t_COLON(t):
     t.value = ":"
     return t
 
-"""def t_DOT(t):
-    r"DOT\b"
-    t.value = "."
-    return t"""
-
 def t_FROM(t):
     r"IN[ ]+MAI\b"
     return RESERVED(t, "from")
@@ -203,6 +198,7 @@ def t_EXCEPT(t):
 def t_PLUS(t):
     r"ALONG[ ]+WITH\b"
     return OP(t, "+")
+
 def t_MINUS(t):
     r"TAKE[ ]+AWAY\b"
     return OP(t, "-")
@@ -319,6 +315,7 @@ RESERVED_VALUES = {
     "GIMME": ("RESERVED", "import"),
     "LIKE": ("RESERVED", "as"),
     "OWN": ("OP", "."),
+    "HAX": ("INLINE", "%"),
 
     "PLZ": ("RESERVED", "try"),
     "HALP": ("RESERVED", "raise"),

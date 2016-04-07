@@ -182,6 +182,10 @@
 	  <keyword>THINGZ</keyword>
 	  <!-- . -->
 	  <keyword>OWN</keyword>
+	  <!-- - -->
+	  <keyword>ANTI</keyword>
+      <!-- , -->
+	  <keyword>AND</keyword>
 	  <!-- () -->
 	  <keyword>THING</keyword>
 	  <!-- self. -->
@@ -349,6 +353,7 @@
 	  <keyword>VISIBLE</keyword>
       <!-- stderr -->
 	  <keyword>COMPLAIN</keyword>
+
 
 	  <!-- = -->
 	  <keyword>CAN HAS</keyword>
@@ -564,6 +569,8 @@
 	  <keyword>COPIES HERSELF BY</keyword>
 	  <!-- *= -->
 	  <keyword>COPIES ITSELF BY</keyword>
+      <!-- % -->
+      <keyword>HAX</keyword>
 	  <!-- ** -->
 	  <keyword>BY GRAYSKULL POWER</keyword>
 	  <!-- EQUALITY -->
